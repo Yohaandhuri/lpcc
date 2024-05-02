@@ -1,0 +1,140 @@
+%%
+[\t]+
+is |
+am |
+were |was |
+be |
+being |
+do |
+
+will |
+does |
+would |
+should |
+can |
+could |
+has |
+have |
+had |
+go {printf(&quot;\n%s: is a verb\n&quot;,yytext);}
+[a-zA-Z]+ {printf(&quot;\n%s is not a verb\n&quot;,yytext);}
+.|\n
+%%
+int yywrap(){}
+int main(){
+yylex();
+return 0;
+}
+
+
+
+////////
+
+%{
+#include&lt;stdio.h&gt;
+enum{
+lookup=0,
+VERB,
+ADJ,
+ADV,
+NOUN,
+PREP,
+PRON,
+CONJ};
+int state;
+int lookup_word(char *word);
+int add_word(int type,char *word);
+%}
+%%
+\n {state=lookup;}
+^VERB {state=VERB;}
+^ADJ {state=ADJ;}
+^ADV {state=ADV;}
+^NOUN {state=NOUN;}
+^PREP {state=PREP;}
+^PRON {state=PRON;}
+^CONJ {state=CONJ;}
+[a-zA-Z]+ {
+if(state!=lookup){
+add_word(state,yytext);
+}
+else{
+switch(lookup_word(yytext)){
+
+case VERB:printf(&quot;%s:verb\n&quot;,yytext);break;
+case ADJ:printf(&quot;%s:adjective\n&quot;,yytext);break;
+case ADV:printf(&quot;%s:adverb\n&quot;,yytext);break;
+case NOUN:printf(&quot;%s:noun\n&quot;,yytext);break;
+case PREP:printf(&quot;%s:preposition\n&quot;,yytext);break;
+case PRON:printf(&quot;%s:pronoun\n&quot;,yytext);break;
+default:printf(&quot;%s:did not recognize\n&quot;,yytext);break;
+}
+}
+}
+.
+%%
+int yywrap(void){}
+main(){
+yylex();
+}
+/*making a linked list of words and their types*/
+struct word{
+char *word_name;
+int word_type;
+struct word *next;
+};
+struct word *word_list;
+extern void *malloc();/* adding the word to the linkedlist */
+int add_word(int type,char *word){
+struct word *wp;
+if(lookup_word(word)!=lookup){
+printf(&quot;%s !!!Warning word already exsists \n&quot;,word);
+return 0;
+}
+wp=(struct word*)malloc(sizeof(struct word));
+wp-&gt;next=word_list;
+wp-&gt;word_name=(char*)malloc(strlen(word)+1);
+
+strcpy(wp-&gt;word_name,word);
+wp-&gt;word_type=type;
+word_list=wp;
+/* done successfully */
+return 1;
+}
+/* checking for the word if it exists in the table */
+int lookup_word(char *word){
+struct word *wp=word_list;
+for(;wp;wp=wp-&gt;next){
+if(strcmp(wp-&gt;word_name,word)==0){
+return wp-&gt;word_type;
+}
+}
+return lookup;
+}
+
+
+///////////
+%{
+#include <stdio.h>
+#include <string.h>
+%}
+
+%%
+int|char|float|double { printf("Data Type: %s\n", yytext); }
+if|else|while|for|switch|case { printf("Control Keyword: %s\n", yytext); }
+[a-zA-Z][a-zA-Z0-9_]* { printf("Identifier: %s\n", yytext); }
+[0-9]+ { printf("Number: %s\n", yytext); }
+\"([^\\\"]|\\.)*\" { printf("String Literal: %s\n", yytext); }
+\/\/.* { printf("Comment: %s\n", yytext); }
+[\t\n] ; /* ignore whitespace and newline */
+. ; /* ignore any other character */
+%%
+
+int main()
+{
+    yyin = stdin;
+    yylex();
+    return 0;
+}
+
+
